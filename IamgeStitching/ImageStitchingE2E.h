@@ -15,3 +15,4 @@ enum extract_methods{SIFT,SUFT,ORB,FERNS};
 4：最终拼接后的图片路径
 */
 std::vector<std::string> ImageStitchingE2E(std::string img1_path, std::string img2_path,int method= extract_methods::SIFT);
+
