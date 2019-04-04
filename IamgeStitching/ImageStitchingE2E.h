@@ -17,6 +17,7 @@ using namespace cv::xfeatures2d;
 
 enum Feature{SIFT, SURF, ORB, FERNS};
 
+
 /*
 输入参数：img1_path、img2_path:两张输入图片路径
 输出参数：长度为5的数组，数组的每一项是一张图片的路径的string对象，分别为：
