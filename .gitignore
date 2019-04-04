@@ -387,3 +387,4 @@ ASALocalRun/
 .localhistory/
 
 *.vcxproj.*
+*.vcxproj
