@@ -68,7 +68,7 @@ void ImageStitcher::extractFeatures(Mat& descriptors1, Mat& descriptors2)
 	}
 
 	//Detect the keypoints
-	double t0 = getTickCount();//ï¿½ï¿½Ç°ï¿½Î´ï¿½ï¿½ï¿½
+	double t0 = getTickCount();//µ±Ç°µÎ´ðÊý
 	//vector<KeyPoint> keypoints_1, keypoints_2;
 	f2d->detect(img1, raw_kpts1);
 	f2d->detect(img2, raw_kpts2);
@@ -89,18 +89,17 @@ void ImageStitcher::extractFeatures(Mat& descriptors1, Mat& descriptors2)
 
 void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 {
-	//BFMatcher matcher;
-	FlannBasedMatcher matcher;
+	BFMatcher matcher;
 	vector<DMatch> bf_matches;
 	matcher.match(descriptors1, descriptors2, bf_matches);
 	cout << "The number of match:" << bf_matches.size() << endl;
 
-	//ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½ï¿½ï¿½Ä¹Ø¼ï¿½ï¿½ï¿½
+	//»æÖÆÆ¥Åä³öµÄ¹Ø¼üµã
 	//Mat img_matches;
 	//drawMatches(img1, raw_kpts1, img2, raw_kpts2, matches, img_matches);
 
 	//imshow("Match image",img_matches);
-	//ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½ï¿½ï¿½ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¾ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡Öµ
+	//¼ÆËãÆ¥Åä½á¹ûÖÐ¾àÀë×î´óºÍ¾àÀë×îÐ¡Öµ
 	double min_dist = bf_matches[0].distance, max_dist = bf_matches[0].distance;
 	for (int m = 0; m < bf_matches.size(); m++)
 	{
@@ -115,7 +114,7 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 	}
 	cout << "min dist=" << min_dist << endl;
 	cout << "max dist=" << max_dist << endl;
-	//É¸Ñ¡ï¿½ï¿½ï¿½ÏºÃµï¿½Æ¥ï¿½ï¿½ï¿½
+	//É¸Ñ¡³ö½ÏºÃµÄÆ¥Åäµã
 	vector<DMatch> goodMatches;
 	for (int m = 0; m < bf_matches.size(); m++)
 	{
@@ -127,16 +126,16 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 	cout << "The number of good matches:" << goodMatches.size() << endl;
 
 	
-	//ï¿½ï¿½É«ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½Æ¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½Î´Æ¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	//matchColor ï¿½C Color of matches (lines and connected keypoints). If matchColor==Scalar::all(-1) , the color is generated randomly.
-	//singlePointColor ï¿½C Color of single keypoints(circles), which means that keypoints do not have the matches.If singlePointColor == Scalar::all(-1), the color is generated randomly.
-	//CV_RGB(0, 255, 0)ï¿½æ´¢Ë³ï¿½ï¿½ÎªR-G-B,ï¿½ï¿½Ê¾ï¿½ï¿½É«
+	//ºìÉ«Á¬½ÓµÄÊÇÆ¥ÅäµÄÌØÕ÷µãÊý£¬ÂÌÉ«Á¬½ÓµÄÊÇÎ´Æ¥ÅäµÄÌØÕ÷µãÊý
+	//matchColor ¨C Color of matches (lines and connected keypoints). If matchColor==Scalar::all(-1) , the color is generated randomly.
+	//singlePointColor ¨C Color of single keypoints(circles), which means that keypoints do not have the matches.If singlePointColor == Scalar::all(-1), the color is generated randomly.
+	//CV_RGB(0, 255, 0)´æ´¢Ë³ÐòÎªR-G-B,±íÊ¾ÂÌÉ«
 
 	//Mat imgOut;
 	//drawMatches(img1, keypoints1, img2, keypoints2, goodMatches, imgOut, Scalar::all(-1), CV_RGB(0, 0, 255), Mat(), 2);
 	//imshow("good Matches", img_out);
 
-	//RANSACÆ¥ï¿½ï¿½ï¿½ï¿½ï¿½
+	//RANSACÆ¥Åä¹ý³Ì
 
 	//vector<DMatch> m_Matches;
 	matches = goodMatches;
@@ -146,8 +145,8 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 		throw exception("Lack of matched points after RANSAC.");
 	}
 
-	//ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªfloatï¿½ï¿½ï¿½ï¿½
-	//size_tï¿½Ç±ï¿½×¼Cï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½Ä£ï¿½Ó¦Îªunsigned intï¿½ï¿½ï¿½ï¿½64Î»ÏµÍ³ï¿½ï¿½Îªlong unsigned int,ï¿½ï¿½C++ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Í¬ï¿½ï¿½Æ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½Ö²ï¿½Ô¡ï¿½
+	//×ø±ê×ª»»ÎªfloatÀàÐÍ
+	//size_tÊÇ±ê×¼C¿âÖÐ¶¨ÒåµÄ£¬Ó¦Îªunsigned int£¬ÔÚ64Î»ÏµÍ³ÖÐÎªlong unsigned int,ÔÚC++ÖÐÎªÁËÊÊÓ¦²»Í¬µÄÆ½Ì¨£¬Ôö¼Ó¿ÉÒÆÖ²ÐÔ¡£
 	for (::size_t i = 0; i < matches.size(); i++)
 	{
 		ransac_kpts1.push_back(raw_kpts1[goodMatches[i].queryIdx]);
@@ -170,12 +169,12 @@ void ImageStitcher::imageTransform()
 	//m_homography = findHomography(p01, p02, CV_RANSAC);
 	m_homography = findHomography(p02, p01, CV_RANSAC);
 	cout << "m_homography:" << m_homography << endl;
-	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Fundamental,3*3ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	//Çó»ù´¡¾ØÕó Fundamental,3*3µÄ»ù´¡¾ØÕó
 	vector<uchar> RansacStatus;
 	Mat Fundamental = findFundamentalMat(p02, p01, RansacStatus, FM_RANSAC);
 	cout << "Fundamental:" << Fundamental << endl;
 
-	//ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½RR_KPï¿½ï¿½RR_matchesï¿½ï¿½ï¿½æ´¢ï¿½ÂµÄ¹Ø¼ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½RansacStatusï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½ï¿½
+	//ÖØÐÂ¶¨Òå¹Ø¼üµãRR_KPºÍRR_matchesÀ´´æ´¢ÐÂµÄ¹Ø¼üµãºÍ»ù´¡¾ØÕó£¬Í¨¹ýRansacStatusÀ´É¾³ýÎóÆ¥Åäµã
 	vector <KeyPoint> RR_KP1, RR_KP2;
 	vector <DMatch> RR_matches;
 	int index = 0;
@@ -191,7 +190,7 @@ void ImageStitcher::imageTransform()
 			index++;
 		}
 	}
-	cout << "RANSACï¿½ï¿½Æ¥ï¿½ï¿½ï¿½ï¿½ï¿½" << RR_matches.size() << endl;
+	cout << "RANSACºóÆ¥ÅäµãÊý" << RR_matches.size() << endl;
 	//Mat img_RR_matches;
 	drawMatches(img1, RR_KP1, img2, RR_KP2, RR_matches, img_after_ransac);
 	imshow("After RANSAC", img_after_ransac);
@@ -209,14 +208,14 @@ void ImageStitcher::imageTransform()
 	home = m_homography;
 	cout << "invert:" << home << endl;
 
-	std::vector<Point2f> obj_corners(4);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½
+	std::vector<Point2f> obj_corners(4);//¶¨ÒåÓÒÍ¼µÄËÄ¸ö½Ç
 	obj_corners[0] = cvPoint(0, 0);
 	obj_corners[1] = cvPoint(img2.cols, 0);
 	obj_corners[2] = cvPoint(img2.cols, img2.rows);
 	obj_corners[3] = cvPoint(0, img2.rows);
 
-	std::vector<Point2f> scene_corners(4);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½
-	perspectiveTransform(obj_corners, scene_corners, home);//ï¿½ï¿½ï¿½ï¿½Í¼ï¿½Ä½ï¿½Í¶Ó°ï¿½ï¿½ï¿½ï¿½Í¼
+	std::vector<Point2f> scene_corners(4);//¶¨Òå×óÍ¼µÄËÄ¸ö½Ç
+	perspectiveTransform(obj_corners, scene_corners, home);//½«ÓÒÍ¼ËÄ½ÇÍ¶Ó°ÖÁ×óÍ¼
 
 	cout << "left_top:" << scene_corners[0].x << " " << scene_corners[0].y << endl;
 	cout << "right_top:" << scene_corners[1].x << " " << scene_corners[1].y << endl;
@@ -228,8 +227,8 @@ void ImageStitcher::imageTransform()
 	warpPerspective(img2, imageTransform1, home, Size(MAX(scene_corners[1].x, scene_corners[2].x), img1.rows));
 	cv::Mat t_mat = cv::Mat::zeros(2, 3, CV_32FC1);
 
-	//ï¿½ï¿½ï¿½ï¿½Æ´ï¿½Óºï¿½ï¿½Í¼,ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Í¼ï¿½Ä´ï¿½Ð¡
-	int dst_width = imageTransform1.cols;  //È¡ï¿½ï¿½ï¿½Òµï¿½Ä³ï¿½ï¿½ï¿½ÎªÆ´ï¿½ï¿½Í¼ï¿½Ä³ï¿½ï¿½ï¿½
+	//´´½¨Æ´½ÓºóµÄÍ¼,ÐèÌáÇ°¼ÆËãÍ¼µÄ´óÐ¡
+	int dst_width = imageTransform1.cols;  //È¡×îÓÒµãµÄ³¤¶ÈÎªÆ´½ÓÍ¼µÄ³¤¶È
 	int dst_height = img1.rows;
 	//Mat dst(dst_height, dst_width, CV_8UC3);
 	//dst.setTo(0);
@@ -241,37 +240,36 @@ void ImageStitcher::imageTransform()
 	img_stitched.setTo(0);
 	imageTransform1.copyTo(img_stitched(Rect(0, 0, imageTransform1.cols, imageTransform1.rows)));
 	img1.copyTo(img_stitched(Rect(0, 0, img1.cols, img1.rows)));
-	ImageStitcher::optimizeSeam(img1, imageTransform1, img_stitched, MIN(scene_corners[0].x, scene_corners[3].x), img1.cols);
 	imshow("stitched image", img_stitched);
+	ImageStitcher::optimizeSeam(img1, imageTransform1, img_stitched, MIN(scene_corners[0].x, scene_corners[3].x), img1.cols);
+	imshow("stitched image after optimize.", img_stitched);
 	
 }
 
 void ImageStitcher::optimizeSeam(Mat& img1,Mat& trans, Mat& dst, int left_cover, int right_cover)
 {
-	int processWidth = right_cover-left_cover;//ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½  
-	int start = left_cover+ processWidth/3*2;//ï¿½ï¿½Ê¼Î»ï¿½ï¿½  
+	int processWidth = right_cover-left_cover; 
+	int start = left_cover+ processWidth/3*2;  
 
 	int img1_row = img1.rows;
 	int trans_row = trans.rows;
 	int dst_row = dst.rows;
 	int rows = MIN(MIN(img1_row, trans_row), dst_row);
-	int cols = img1.cols; //×¢ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*Í¨ï¿½ï¿½ï¿½ï¿½
-	double alpha = 1;//img1ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½È¨ï¿½ï¿½  
+	int cols = img1.cols; 
+	double alpha = 1;
 	for (int i = 0; i < rows; i++)
 	{
-		uchar* p = img1.ptr<uchar>(i);  //ï¿½ï¿½È¡ï¿½ï¿½iï¿½Ðµï¿½ï¿½×µï¿½Ö·
+		uchar* p = img1.ptr<uchar>(i);  
 		uchar* t = trans.ptr<uchar>(i);
 		uchar* d = dst.ptr<uchar>(i);
 		for (int j = start; j < cols; j++)
 		{
-			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½transï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØµÄºÚµã£¬ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½img1ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 			if (t[j * 3] == 0 && t[j * 3 + 1] == 0 && t[j * 3 + 2] == 0)
 			{
 				alpha = 1;
 			}
 			else
 			{
-				//img1ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½È¨ï¿½Ø£ï¿½ï¿½ëµ±Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½Êµï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½È·Êµï¿½ï¿½  
 				alpha =(processWidth - (j - start)) / processWidth;
 			}
 
@@ -287,26 +285,21 @@ void ImageStitcher::colorBalance()
 {
 	vector<Mat> imageRGB;
 	split(img_stitched, imageRGB);
-	//ï¿½ï¿½Ô­Ê¼Í¼ï¿½ï¿½ï¿½RGBï¿½ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½Öµ
 	double R, G, B;
 	B = mean(imageRGB[0])[0];
 	G = mean(imageRGB[1])[0];
 	R = mean(imageRGB[2])[0];
 
-	//ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½RGBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	double KR, KG, KB;
 	KB = (R + G + B) / (3 * B);
 	KG = (R + G + B) / (3 * G);
 	KR = (R + G + B) / (3 * R);
 
-	//ï¿½ï¿½ï¿½ï¿½RGBï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½Öµ
 	imageRGB[0] = imageRGB[0] * KB;
 	imageRGB[1] = imageRGB[1] * KG;
 	imageRGB[2] = imageRGB[2] * KR;
 
-	//RGBï¿½ï¿½Í¨ï¿½ï¿½Í¼ï¿½ï¿½Ï²ï¿½
 	merge(imageRGB, img_stitched);
-	imshow("ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", img_stitched);
 }
 
 Mat matrixWiseMulti(Mat &m1, Mat &m2) {
@@ -319,19 +312,18 @@ void ImageStitcher::AcE(int C, int n, float MaxCG)
 	int rows = img_stitched.rows;
 	int cols = img_stitched.cols;
 
-	Mat meanLocal; //Í¼ï¿½ï¿½Ö²ï¿½ï¿½ï¿½Öµ  
-	Mat varLocal;  //Í¼ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½  
-	Mat meanGlobal;//È«ï¿½Ö¾ï¿½Öµ
-	Mat varGlobal; //È«ï¿½Ö±ï¿½×¼ï¿½ï¿½  
+	Mat meanLocal; 
+	Mat varLocal;   
+	Mat meanGlobal;
+	Mat varGlobal; 
 
 	blur(img_stitched.clone(), meanLocal, Size(n, n));
 	imshow("ï¿½ï¿½Í¨ï¿½Ë²ï¿½", meanLocal);
-	Mat highFreq = img_stitched - meanLocal;//ï¿½ï¿½Æµï¿½É·ï¿½ 
+	Mat highFreq = img_stitched - meanLocal;
 	imshow("ï¿½ï¿½Æµï¿½É·ï¿½", highFreq);
 
 	varLocal = matrixWiseMulti(highFreq, highFreq);
 	blur(varLocal, varLocal, Size(n, n));
-	//ï¿½ï¿½ï¿½ï¿½É¾Ö²ï¿½ï¿½ï¿½×¼ï¿½ï¿½  
 	varLocal.convertTo(varLocal, CV_32F);
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
@@ -339,9 +331,8 @@ void ImageStitcher::AcE(int C, int n, float MaxCG)
 		}
 	}
 	meanStdDev(img_stitched, meanGlobal, varGlobal);
-	Mat gainArr = 0.5 * meanGlobal / varLocal;//ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  
+	Mat gainArr = 0.5 * meanGlobal / varLocal;  
 
-	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð½ï¿½Ö¹  
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
 			if (gainArr.at<float>(i, j) > MaxCG) {
@@ -352,8 +343,6 @@ void ImageStitcher::AcE(int C, int n, float MaxCG)
 	gainArr.convertTo(gainArr, CV_8U);
 	gainArr = matrixWiseMulti(gainArr, highFreq);
 	Mat dst1 = meanLocal + gainArr;
-	imshow("ï¿½ï¿½ï¿½ï¿½ï¿½æ·½ï¿½ï¿½", dst1);
 	Mat dst2 = meanLocal + C * highFreq;
-	imshow("ï¿½ï¿½ï¿½ï¿½ï¿½æ·½ï¿½ï¿½", dst2);
 
 }
