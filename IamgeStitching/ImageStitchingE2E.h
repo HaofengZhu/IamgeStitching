@@ -55,7 +55,9 @@ private:
 	void extractFeatures(Mat& descriptors1, Mat& descriptors2);
 	void matchKeyPoints(Mat& descriptors1, Mat& descriptors2);
 	void imageTransform();
-	void optimizeSeam();
+	void optimizeSeam(Mat& img1, Mat& trans, Mat& dst, int left_cover, int right_cover);
+	void colorBalance();
+	void AcE(int C = 3, int n = 3, float MaxCG = 7.5);
 };
 
 

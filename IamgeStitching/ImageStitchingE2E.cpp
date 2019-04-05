@@ -9,8 +9,9 @@ void ImageStitcher::runPipeline(Feature feat)
 	
 	vector<Point2f> p01, p02;
 	matchKeyPoints(descriptors1, descriptors2);
-
 	imageTransform();
+	colorBalance();
+	AcE();
 }
 
 
@@ -240,6 +241,119 @@ void ImageStitcher::imageTransform()
 	img_stitched.setTo(0);
 	imageTransform1.copyTo(img_stitched(Rect(0, 0, imageTransform1.cols, imageTransform1.rows)));
 	img1.copyTo(img_stitched(Rect(0, 0, img1.cols, img1.rows)));
+	ImageStitcher::optimizeSeam(img1, imageTransform1, img_stitched, MIN(scene_corners[0].x, scene_corners[3].x), img1.cols);
 	imshow("stitched image", img_stitched);
 	
+}
+
+void ImageStitcher::optimizeSeam(Mat& img1,Mat& trans, Mat& dst, int left_cover, int right_cover)
+{
+	int processWidth = right_cover-left_cover;//重叠区域的宽度  
+	int start = left_cover+ processWidth/3*2;//开始位置  
+
+	int img1_row = img1.rows;
+	int trans_row = trans.rows;
+	int dst_row = dst.rows;
+	int rows = MIN(MIN(img1_row, trans_row), dst_row);
+	int cols = img1.cols; //注意，是列数*通道数
+	double alpha = 1;//img1中像素的权重  
+	for (int i = 0; i < rows; i++)
+	{
+		uchar* p = img1.ptr<uchar>(i);  //获取第i行的首地址
+		uchar* t = trans.ptr<uchar>(i);
+		uchar* d = dst.ptr<uchar>(i);
+		for (int j = start; j < cols; j++)
+		{
+			//如果遇到图像trans中无像素的黑点，则完全拷贝img1中的数据
+			if (t[j * 3] == 0 && t[j * 3 + 1] == 0 && t[j * 3 + 2] == 0)
+			{
+				alpha = 1;
+			}
+			else
+			{
+				//img1中像素的权重，与当前处理点距重叠区域左边界的距离成正比，实验证明，这种方法确实好  
+				alpha =(processWidth - (j - start)) / processWidth;
+			}
+
+			d[j * 3] =p[j * 3] * alpha + t[j * 3] * (1 - alpha);
+			d[j * 3 + 1] =p[j * 3 + 1] * alpha + t[j * 3 + 1] * (1 - alpha);
+			d[j * 3 + 2] =p[j * 3 + 2] * alpha + t[j * 3 + 2] * (1 - alpha);
+
+		}
+	}
+}
+
+void ImageStitcher::colorBalance()
+{
+	vector<Mat> imageRGB;
+	split(img_stitched, imageRGB);
+	//求原始图像的RGB分量的均值
+	double R, G, B;
+	B = mean(imageRGB[0])[0];
+	G = mean(imageRGB[1])[0];
+	R = mean(imageRGB[2])[0];
+
+	//需要调整的RGB分量的增益
+	double KR, KG, KB;
+	KB = (R + G + B) / (3 * B);
+	KG = (R + G + B) / (3 * G);
+	KR = (R + G + B) / (3 * R);
+
+	//调整RGB三个通道各自的值
+	imageRGB[0] = imageRGB[0] * KB;
+	imageRGB[1] = imageRGB[1] * KG;
+	imageRGB[2] = imageRGB[2] * KR;
+
+	//RGB三通道图像合并
+	merge(imageRGB, img_stitched);
+	imshow("白平衡调整后", img_stitched);
+}
+
+Mat matrixWiseMulti(Mat &m1, Mat &m2) {
+	Mat dst = m1.mul(m2);
+	return dst;
+}
+
+void ImageStitcher::AcE(int C, int n, float MaxCG)
+{
+	int rows = img_stitched.rows;
+	int cols = img_stitched.cols;
+
+	Mat meanLocal; //图像局部均值  
+	Mat varLocal;  //图像局部方差  
+	Mat meanGlobal;//全局均值
+	Mat varGlobal; //全局标准差  
+
+	blur(img_stitched.clone(), meanLocal, Size(n, n));
+	imshow("低通滤波", meanLocal);
+	Mat highFreq = img_stitched - meanLocal;//高频成分 
+	imshow("高频成分", highFreq);
+
+	varLocal = matrixWiseMulti(highFreq, highFreq);
+	blur(varLocal, varLocal, Size(n, n));
+	//换算成局部标准差  
+	varLocal.convertTo(varLocal, CV_32F);
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			varLocal.at<float>(i, j) = (float)sqrt(varLocal.at<float>(i, j));
+		}
+	}
+	meanStdDev(img_stitched, meanGlobal, varGlobal);
+	Mat gainArr = 0.5 * meanGlobal / varLocal;//增益系数矩阵  
+
+	//对增益矩阵进行截止  
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			if (gainArr.at<float>(i, j) > MaxCG) {
+				gainArr.at<float>(i, j) = MaxCG;
+			}
+		}
+	}
+	gainArr.convertTo(gainArr, CV_8U);
+	gainArr = matrixWiseMulti(gainArr, highFreq);
+	Mat dst1 = meanLocal + gainArr;
+	imshow("变增益方法", dst1);
+	Mat dst2 = meanLocal + C * highFreq;
+	imshow("恒增益方法", dst2);
+
 }
