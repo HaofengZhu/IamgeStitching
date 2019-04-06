@@ -11,7 +11,6 @@
 #include<opencv2/core/core.hpp>
 #include<iostream>
 #include<opencv2/stitching/warpers.hpp>
-using namespace cv;
 using namespace std;
 using namespace cv::xfeatures2d;
 
@@ -32,32 +31,36 @@ class ImageStitcher {
 public:
 	void runPipeline(Feature feat);
 	void loadImages(const std::string& img1_path, const std::string& img2_path);
-	void saveImages();
+	void saveImages(const char* path= "");
 
 private:
-	Mat img1;
-	Mat img2;
+	cv::Mat img1;
+	cv::Mat img2;
 	Feature feat;
 
-	vector<KeyPoint> raw_kpts1;
-	vector<KeyPoint> raw_kpts2;
+	vector<cv::KeyPoint> raw_kpts1;
+	vector<cv::KeyPoint> raw_kpts2;
 
-	vector<KeyPoint> ransac_kpts1;
-	vector<KeyPoint> ransac_kpts2;
+	vector<cv::KeyPoint> ransac_kpts1;
+	vector<cv::KeyPoint> ransac_kpts2;
 
-	vector<DMatch> matches;
+	vector<cv::DMatch> matches;
 
 	//result images
-	Mat img_detect_kpts;
-	Mat img_after_ransac;
-	Mat img_stitched;
+	cv::Mat img_detect_kpts;
+	cv::Mat img_after_ransac;
+	cv::Mat img_stitched;
+	cv::Mat img_postprocess;
 
-	void extractFeatures(Mat& descriptors1, Mat& descriptors2);
-	void matchKeyPoints(Mat& descriptors1, Mat& descriptors2);
+	void extractFeatures(cv::Mat& descriptors1, cv::Mat& descriptors2);
+	void matchKeyPoints(cv::Mat& descriptors1, cv::Mat& descriptors2);
 	void imageTransform();
-	void optimizeSeam(Mat& img1, Mat& trans, Mat& dst, int left_cover, int right_cover);
+	void optimizeSeam(cv::Mat& img1, cv::Mat& trans, cv::Mat& dst, int left_cover, int right_cover);
 	void colorBalance();
 	void AcE(int C = 3, int n = 2, float MaxCG = 7.5);
+
+
+	string getSavePath(const char* raw_path);
 };
 
 

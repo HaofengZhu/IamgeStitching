@@ -328,15 +328,41 @@
 //}
 
 
+
 #include "ImageStitchingE2E.h"
+
+void lightProcessing(cv::Mat& image) {
+	//Mat image = imread(path, 1);
+	if (!image.data)
+	{
+		cout << "image loading error" << endl;
+	}
+	cv::Mat imageRGB[3];
+	split(image, imageRGB);
+	for (int i = 0; i < 3; i++)
+	{
+		equalizeHist(imageRGB[i], imageRGB[i]);
+	}
+	merge(imageRGB, 3, image);
+	imshow("equalizeHist", image);
+	cv::waitKey();
+
+	//return image;
+}
 
 int main() {
 	ImageStitcher stitcher;
-	stitcher.loadImages("input/1.jpg", "input/2.jpg");
-	stitcher.runPipeline(Feature::SIFT);
-	stitcher.saveImages();
-
-	waitKey(0);
+	try {
+		stitcher.loadImages("ImageStitching/input/c10_1.jpg", "ImageStitching/input/c10_2.jpg");
+		stitcher.runPipeline(Feature::SURF);
+		stitcher.saveImages("C:/Projects/ImageStitching/ImageStitching/output");
+		//stitcher.saveImages();
+		cv::waitKey(0);
+	}
+	catch (exception ex) {
+		cout << "Exception: " << ex.what() << endl;
+	}
+	
 
 	return 0;
 }
