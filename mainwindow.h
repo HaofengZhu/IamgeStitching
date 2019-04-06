@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QString>
 
+#include <vector>
+#include "ImageStitching/ImageStitchingE2E.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -28,10 +31,22 @@ private slots:
 
     void on_showButton3_clicked();
 
+	void on_runButton_clicked();
+
+	void on_a1_clicked();
+
+	void on_a2_clicked();
+
+	void on_a3_clicked();
+
+	void on_a4_clicked();
+
 private:
     Ui::MainWindow *ui;
-    QString pics[5] = {"C://Users//kunxi//Desktop//0.png","C://Users//kunxi//Desktop//1.jpg","C://Users//kunxi//Desktop//2.jpg","C://Users//kunxi//Desktop//3.jpg","C://Users//kunxi//Desktop//4.jpg"};
+    //QString pics[5];
+	std::vector<QString> pics;
 
+	ImageStitcher stitcher;
 };
 
 #endif // MAINWINDOW_H

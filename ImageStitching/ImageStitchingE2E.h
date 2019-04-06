@@ -29,11 +29,18 @@ enum Feature{SIFT, SURF, ORB, FERNS};
 
 class ImageStitcher {
 public:
-	void runPipeline(Feature feat);
+	void runPipeline();
+	void loadImages();
 	void loadImages(const std::string& img1_path, const std::string& img2_path);
-	void saveImages(const char* path= "");
+	vector<string> saveImages(const char* path= "");
+	void setLeftImagePath(const string path);
+	void setRightImagePath(const string path);
+	void setFeatureExtractor(Feature feature);
 
 private:
+	string left_img_path;
+	string right_img_path;
+
 	cv::Mat img1;
 	cv::Mat img2;
 	Feature feat;
@@ -47,7 +54,9 @@ private:
 	vector<cv::DMatch> matches;
 
 	//result images
+	cv::Mat img_origin;
 	cv::Mat img_detect_kpts;
+	cv::Mat img_rm_outlier;
 	cv::Mat img_after_ransac;
 	cv::Mat img_stitched;
 	cv::Mat img_postprocess;

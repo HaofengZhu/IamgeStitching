@@ -347,14 +347,14 @@ void lightProcessing(cv::Mat& image) {
 	imshow("equalizeHist", image);
 	cv::waitKey();
 
-	//return image;
 }
 
 int main() {
 	ImageStitcher stitcher;
 	try {
-		stitcher.loadImages("ImageStitching/input/c10_1.jpg", "ImageStitching/input/c10_2.jpg");
-		stitcher.runPipeline(Feature::SURF);
+		stitcher.loadImages("input/c10_1.jpg", "input/c10_2.jpg");
+		stitcher.setFeatureExtractor(Feature::ORB);
+		stitcher.runPipeline();
 		stitcher.saveImages("C:/Projects/ImageStitching/ImageStitching/output");
 		//stitcher.saveImages();
 		cv::waitKey(0);

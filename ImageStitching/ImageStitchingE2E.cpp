@@ -4,9 +4,9 @@
 
 using namespace cv;
 
-void ImageStitcher::runPipeline(Feature feat)
+void ImageStitcher::runPipeline()
 {
-	this->feat = feat;
+	//this->feat = feature;
 	//vector<KeyPoint> keypoints1, keypoints2;
 	Mat descriptors1, descriptors2;
 	extractFeatures(descriptors1, descriptors2);
@@ -15,7 +15,23 @@ void ImageStitcher::runPipeline(Feature feat)
 	matchKeyPoints(descriptors1, descriptors2);
 	imageTransform();
 	colorBalance();
- 	AcE();
+}
+
+void ImageStitcher::loadImages()
+{
+	img1 = imread(left_img_path);
+	if (img1.data == NULL) {
+		char msg[200] = "Cannot find image ";
+		strcat(msg, left_img_path.c_str());
+		throw runtime_error(msg);
+	}
+
+	img2 = imread(right_img_path);
+	if (img2.data == NULL) {
+		char msg[200] = "Cannot find image ";
+		strcat(msg, right_img_path.c_str());
+		throw runtime_error(msg);
+	}
 }
 
 
@@ -35,6 +51,8 @@ void ImageStitcher::loadImages(const std::string& img1_path, const std::string& 
 		strcat(msg, img2_path.c_str());
 		throw runtime_error(msg);
 	}
+
+	drawMatches(img1, raw_kpts1, img2, raw_kpts2, vector<DMatch>(), img_origin);
 
 	//img1 = imread(img1_path);
 	//if (img1.data == NULL) return false;
@@ -78,20 +96,31 @@ string ImageStitcher::getSavePath(const char * raw_path)
 }
 
 
-void ImageStitcher::saveImages(const char* save_path)
+vector<string> ImageStitcher::saveImages(const char* save_path)
 {
+	vector<string> res;
+
 	string save_dir = getSavePath(save_path);
 	cout << "save_path: " << save_dir << endl;
 	if (CreateDirectoryA(save_dir.c_str(), NULL) ||
 		GetLastError() == ERROR_ALREADY_EXISTS) {
 		try {
-			imwrite(save_dir + string("/detect_keypoints.jpg"), img_detect_kpts);
-			imwrite(save_dir + string("/ransac_result.jpg"), img_after_ransac);
-			imwrite(save_dir + string("/stitching_result.jpg"), img_stitched);
-			imwrite(save_dir + string("/postprocess.jpg"), img_postprocess);
+			res.push_back(save_dir + string("/origin.jpg"));
+			imwrite(res.back(), img_origin);
+			res.push_back(save_dir + string("/detect_keypoints.jpg"));
+			imwrite(res.back(), img_detect_kpts);
+			res.push_back(save_dir + string("/remove_outlier.jpg"));
+			imwrite(res.back(), img_rm_outlier);
+			res.push_back(save_dir + string("/ransac_result.jpg"));
+			imwrite(res.back(), img_after_ransac);
+			//res.push_back(save_dir + string("/stitching_result.jpg"));
+			//imwrite(res.back(), img_stitched);
+			res.push_back(save_dir + string("/postprocess.jpg"));
+			imwrite(res.back(), img_postprocess);
+			return res;
 		}
 		catch (runtime_error& ex) {
-			cerr << "cannot save image:" << ex.what() << endl;
+			cerr << "cannot save image: " << ex.what() << endl;
 			throw exception("Cannot save image.");
 		}
 	}
@@ -99,7 +128,22 @@ void ImageStitcher::saveImages(const char* save_path)
 		throw exception("Save path error.");
 	}
 	
-	
+	return vector<string>();
+}
+
+void ImageStitcher::setLeftImagePath(const string path)
+{
+	left_img_path = path;
+}
+
+void ImageStitcher::setRightImagePath(const string path)
+{
+	right_img_path = path;
+}
+
+void ImageStitcher::setFeatureExtractor(Feature feature)
+{
+	this->feat = feature;
 }
 
 
@@ -148,9 +192,16 @@ void ImageStitcher::extractFeatures(Mat& descriptors1, Mat& descriptors2)
 void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 {
 	double t0 = getTickCount();
-	BFMatcher matcher;
+	//BFMatcher matcher;
 	vector<DMatch> bf_matches;
-	matcher.match(descriptors1, descriptors2, bf_matches);
+	//FlannBasedMatcher matcher;
+	if (feat == Feature::ORB) {
+		BFMatcher().match(descriptors1, descriptors2, bf_matches);
+	}
+	else {
+		FlannBasedMatcher().match(descriptors1, descriptors2, bf_matches);
+	}
+	
 	cout << "The number of match:" << bf_matches.size() << endl;
 
 	//绘制匹配出的关键点
@@ -175,7 +226,7 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 	cout << "max dist=" << max_dist << endl;
 	//筛选出较好的匹配点
 	vector<DMatch> goodMatches;
-	double ratio = (feat == Feature::ORB) ? 0.8 : 0.2;
+	double ratio = (feat == Feature::ORB) ? 0.8 : 0.4;
 	for (int m = 0; m < bf_matches.size(); m++)
 	{
 		if (bf_matches[m].distance < ratio * max_dist)
@@ -211,6 +262,8 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 		ransac_kpts1.push_back(raw_kpts1[goodMatches[i].queryIdx]);
 		ransac_kpts2.push_back(raw_kpts2[goodMatches[i].trainIdx]);
 	}
+
+	drawMatches(img1, ransac_kpts1, img2, ransac_kpts2, vector<DMatch>(), img_rm_outlier);
 
 	double freq = getTickFrequency();
 	double tt = ((double)getTickCount() - t0) / freq;

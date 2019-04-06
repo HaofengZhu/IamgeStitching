@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>300</height>
+    <width>949</width>
+    <height>576</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QLabel" name="pic1">
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>180</x>
       <y>50</y>
-      <width>41</width>
-      <height>9</height>
+      <width>171</width>
+      <height>141</height>
      </rect>
     </property>
     <property name="text">
@@ -31,9 +31,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>50</y>
-      <width>80</width>
-      <height>15</height>
+      <y>90</y>
+      <width>111</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -44,9 +44,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>140</y>
-      <width>80</width>
-      <height>15</height>
+      <y>290</y>
+      <width>111</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -56,10 +56,10 @@
    <widget class="QLabel" name="pic2">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>140</y>
-      <width>41</width>
-      <height>9</height>
+      <x>180</x>
+      <y>290</y>
+      <width>181</width>
+      <height>151</height>
      </rect>
     </property>
     <property name="text">
@@ -69,10 +69,10 @@
    <widget class="QLabel" name="resPic">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>220</y>
-      <width>41</width>
-      <height>9</height>
+      <x>770</x>
+      <y>370</y>
+      <width>71</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
@@ -82,10 +82,10 @@
    <widget class="QLabel" name="show">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>100</y>
-      <width>41</width>
-      <height>9</height>
+      <x>370</x>
+      <y>170</y>
+      <width>171</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -95,10 +95,10 @@
    <widget class="QPushButton" name="showButton1">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>120</y>
-      <width>80</width>
-      <height>15</height>
+      <x>370</x>
+      <y>200</y>
+      <width>161</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -108,10 +108,10 @@
    <widget class="QPushButton" name="showButton2">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>150</y>
-      <width>80</width>
-      <height>15</height>
+      <x>370</x>
+      <y>240</y>
+      <width>161</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -121,10 +121,10 @@
    <widget class="QPushButton" name="showButton3">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>180</y>
-      <width>80</width>
-      <height>15</height>
+      <x>370</x>
+      <y>280</y>
+      <width>161</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -134,10 +134,10 @@
    <widget class="QLabel" name="choose">
     <property name="geometry">
      <rect>
-      <x>291</x>
-      <y>21</y>
-      <width>36</width>
-      <height>16</height>
+      <x>371</x>
+      <y>41</y>
+      <width>95</width>
+      <height>23</height>
      </rect>
     </property>
     <property name="text">
@@ -147,10 +147,10 @@
    <widget class="QRadioButton" name="a4">
     <property name="geometry">
      <rect>
-      <x>411</x>
-      <y>37</y>
-      <width>42</width>
-      <height>16</height>
+      <x>570</x>
+      <y>70</y>
+      <width>71</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">
@@ -160,9 +160,9 @@
    <widget class="QRadioButton" name="a3">
     <property name="geometry">
      <rect>
-      <x>374</x>
-      <y>37</y>
-      <width>33</width>
+      <x>500</x>
+      <y>70</y>
+      <width>51</width>
       <height>16</height>
      </rect>
     </property>
@@ -173,9 +173,9 @@
    <widget class="QRadioButton" name="a1">
     <property name="geometry">
      <rect>
-      <x>292</x>
-      <y>37</y>
-      <width>37</width>
+      <x>360</x>
+      <y>70</y>
+      <width>81</width>
       <height>16</height>
      </rect>
     </property>
@@ -189,9 +189,9 @@
    <widget class="QRadioButton" name="a2">
     <property name="geometry">
      <rect>
-      <x>333</x>
-      <y>37</y>
-      <width>37</width>
+      <x>430</x>
+      <y>70</y>
+      <width>71</width>
       <height>16</height>
      </rect>
     </property>
@@ -202,10 +202,10 @@
    <widget class="QLabel" name="res">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>220</y>
-      <width>41</width>
-      <height>9</height>
+      <x>410</x>
+      <y>370</y>
+      <width>91</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -215,14 +215,27 @@
    <widget class="QLabel" name="interPic">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>210</y>
-      <width>41</width>
-      <height>9</height>
+      <x>770</x>
+      <y>200</y>
+      <width>91</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string>中间结果</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="runButton">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>120</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>运行</string>
     </property>
    </widget>
   </widget>
@@ -231,8 +244,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>600</width>
-     <height>17</height>
+     <width>949</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>
