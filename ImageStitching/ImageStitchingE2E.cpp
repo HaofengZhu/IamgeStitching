@@ -11,7 +11,7 @@ void ImageStitcher::runPipeline(Feature feat)
 	matchKeyPoints(descriptors1, descriptors2);
 	imageTransform();
 	colorBalance();
-	//AcE();
+ 	AcE();
 }
 
 
@@ -83,7 +83,7 @@ void ImageStitcher::extractFeatures(Mat& descriptors1, Mat& descriptors2)
 	cout << "Extract Features Time:" << tt << "ms" << endl;
 
 	drawMatches(img1, raw_kpts1, img2, raw_kpts2, vector<DMatch>(), img_detect_kpts);
-	//imshow("detect keypoints", img_detect_kpts);
+	imshow("detect keypoints", img_detect_kpts);
 }
 
 
@@ -142,11 +142,10 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 	int ptCount = goodMatches.size();
 	if (ptCount < 100)
 	{
-		throw exception("Lack of matched points after RANSAC.");
+		cout<<"Lack of matched points after RANSAC.";
 	}
-
 	//坐标转换为float类型
-	//size_t是标准C库中定义的，应为unsigned int，在64位系统中为long unsigned int,在C++中为了适应不同的平台，增加可移植性。
+		//size_t是标准C库中定义的，应为unsigned int，在64位系统中为long unsigned int,在C++中为了适应不同的平台，增加可移植性。
 	for (::size_t i = 0; i < matches.size(); i++)
 	{
 		ransac_kpts1.push_back(raw_kpts1[goodMatches[i].queryIdx]);
@@ -300,6 +299,7 @@ void ImageStitcher::colorBalance()
 	imageRGB[2] = imageRGB[2] * KR;
 
 	merge(imageRGB, img_stitched);
+	imshow("color balance", img_stitched);
 }
 
 Mat matrixWiseMulti(Mat &m1, Mat &m2) {
@@ -309,21 +309,21 @@ Mat matrixWiseMulti(Mat &m1, Mat &m2) {
 
 void ImageStitcher::AcE(int C, int n, float MaxCG)
 {
+	
 	int rows = img_stitched.rows;
 	int cols = img_stitched.cols;
 
-	Mat meanLocal; 
-	Mat varLocal;   
-	Mat meanGlobal;
-	Mat varGlobal; 
+	Mat meanLocal; //图像局部均值  
+	Mat varLocal;  //图像局部方差  
+	Mat meanGlobal;//全局均值
+	Mat varGlobal; //全局标准差  
 
 	blur(img_stitched.clone(), meanLocal, Size(n, n));
-	imshow("锟斤拷通锟剿诧拷", meanLocal);
-	Mat highFreq = img_stitched - meanLocal;
-	imshow("锟斤拷频锟缴凤拷", highFreq);
+	Mat highFreq = img_stitched - meanLocal;//高频成分 
 
 	varLocal = matrixWiseMulti(highFreq, highFreq);
 	blur(varLocal, varLocal, Size(n, n));
+	//换算成局部标准差  
 	varLocal.convertTo(varLocal, CV_32F);
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
@@ -331,18 +331,49 @@ void ImageStitcher::AcE(int C, int n, float MaxCG)
 		}
 	}
 	meanStdDev(img_stitched, meanGlobal, varGlobal);
-	Mat gainArr = 0.5 * meanGlobal / varLocal;  
+	cout << meanGlobal << endl;
 
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			if (gainArr.at<float>(i, j) > MaxCG) {
-				gainArr.at<float>(i, j) = MaxCG;
-			}
+	Mat gainArr(varLocal.rows,varLocal.cols, CV_8UC3);//增益系数矩阵
+	uchar Global_0 = meanGlobal.ptr<uchar>(0)[0];
+	uchar Global_1 = meanGlobal.ptr<uchar>(1)[0];
+	uchar Global_2 = meanGlobal.ptr<uchar>(2)[0];
+
+	for (int i = 0; i < varLocal.rows; i++)
+	{
+		uchar* v= varLocal.ptr<uchar>(i);
+		uchar* g = gainArr.ptr<uchar>(i);
+		int alpha = 0.5;
+		for (int j = 0; j < varLocal.cols; j++)
+		{
+			if(v[j * 3]!=0)
+				g[j * 3] = alpha * Global_0 / v[j * 3];
+			else
+				g[j * 3] = 0;
+
+			if (v[j * 3+1] != 0)
+				g[j * 3+1] = alpha * Global_1 / v[j * 3+1];
+			else
+				g[j * 3+1] = 0;
+			if (v[j * 3+2] != 0)
+				g[j * 3+2] = alpha * Global_2 / v[j * 3+2];
+			else
+				g[j * 3+2] = 0;
+
+			if (g[j * 3] > MaxCG)
+				g[j * 3] = MaxCG;
+			if (g[j * 3+1] > MaxCG)
+				g[j * 3+1] = MaxCG;
+			if (g[j * 3+2] > MaxCG)
+				g[j * 3+2] = MaxCG;
 		}
 	}
+
 	gainArr.convertTo(gainArr, CV_8U);
 	gainArr = matrixWiseMulti(gainArr, highFreq);
 	Mat dst1 = meanLocal + gainArr;
+	imshow("变增益方法", dst1);
 	Mat dst2 = meanLocal + C * highFreq;
+	imshow("恒增益方法", dst2);
 
 }
+

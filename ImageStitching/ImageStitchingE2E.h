@@ -57,7 +57,7 @@ private:
 	void imageTransform();
 	void optimizeSeam(Mat& img1, Mat& trans, Mat& dst, int left_cover, int right_cover);
 	void colorBalance();
-	void AcE(int C = 3, int n = 3, float MaxCG = 7.5);
+	void AcE(int C = 3, int n = 2, float MaxCG = 7.5);
 };
 
 
