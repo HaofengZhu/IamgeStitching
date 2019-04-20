@@ -376,4 +376,3 @@ void ImageStitcher::AcE(int C, int n, float MaxCG)
 	imshow("恒增益方法", dst2);
 
 }
-
