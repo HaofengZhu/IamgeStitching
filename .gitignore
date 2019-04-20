@@ -389,6 +389,5 @@ ASALocalRun/
 *.vcxproj.*
 *.vcxproj
 
-output/
 Debug/
 Release/
