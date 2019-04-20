@@ -1,8 +1,12 @@
-#include "ImageStitchingE2E.h"
+#include "ImageStitching.h"
+#include <Windows.h>
+#include <string.h>
 
-void ImageStitcher::runPipeline(Feature feat)
+using namespace cv;
+
+void ImageStitcher::runPipeline()
 {
-	this->feat = feat;
+	//this->feat = feature;
 	//vector<KeyPoint> keypoints1, keypoints2;
 	Mat descriptors1, descriptors2;
 	extractFeatures(descriptors1, descriptors2);
@@ -11,7 +15,23 @@ void ImageStitcher::runPipeline(Feature feat)
 	matchKeyPoints(descriptors1, descriptors2);
 	imageTransform();
 	colorBalance();
- 	AcE();
+}
+
+void ImageStitcher::loadImages()
+{
+	img1 = imread(left_img_path);
+	if (img1.data == NULL) {
+		char msg[200] = "Cannot find image ";
+		strcat(msg, left_img_path.c_str());
+		throw runtime_error(msg);
+	}
+
+	img2 = imread(right_img_path);
+	if (img2.data == NULL) {
+		char msg[200] = "Cannot find image ";
+		strcat(msg, right_img_path.c_str());
+		throw runtime_error(msg);
+	}
 }
 
 
@@ -19,29 +39,111 @@ void ImageStitcher::loadImages(const std::string& img1_path, const std::string& 
 {
 	img1 = imread(img1_path);
 	if (img1.data == NULL) {
-		char err_msg[200];
-		sprintf_s(err_msg, "%s%s", "Cannot find image ", img1_path.c_str());
-		throw exception(err_msg);
+		char msg[200] = "Cannot find image ";
+		strcat(msg, img1_path.c_str());
+		throw runtime_error(msg);
 	}
+
 
 	img2 = imread(img2_path);
 	if (img2.data == NULL) {
-		char err_msg[200];
-		sprintf_s(err_msg, "%s%s", "Cannot find image ", img2_path.c_str());
-		throw exception(err_msg);
+		char msg[200] = "Cannot find image ";
+		strcat(msg, img2_path.c_str());
+		throw runtime_error(msg);
 	}
+
+	drawMatches(img1, raw_kpts1, img2, raw_kpts2, vector<DMatch>(), img_origin);
+
+	//img1 = imread(img1_path);
+	//if (img1.data == NULL) return false;
+
+	//img2 = imread(img2_path);
+	//if (img2.data == NULL) return false;
+
+	//return true;
 }
 
-void ImageStitcher::saveImages()
+
+string ImageStitcher::getSavePath(const char * raw_path)
 {
-	try {
-		imwrite("output/keypoints_detected.png", img_detect_kpts);
-		imwrite("output/ransac_result.png", img_after_ransac);
-		imwrite("output/stitching_result.png", img_stitched);
+	cout << "raw_path: " << raw_path << endl;
+
+	string save_path;
+	if (strcmp(raw_path, "") == 0) {
+		char curr_path[MAX_PATH];
+		GetCurrentDirectoryA(MAX_PATH, curr_path);
+		cout << "curr_path: " << curr_path << endl;
+		save_path = string(curr_path);
 	}
-	catch (runtime_error& ex) {
-		fprintf(stderr, "Cannot save image: ", ex.what());
+	else {
+		save_path = string(raw_path);
 	}
+	
+	switch (feat) {
+	case Feature::SIFT:
+		save_path += "/SIFT";
+		break;
+	case Feature::SURF:
+		save_path += "/SURF";
+		break;
+	case Feature::ORB:
+		save_path += "/ORB";
+		break;
+	default:
+		break;
+	}
+	return save_path;
+}
+
+
+vector<string> ImageStitcher::saveImages(const char* save_path)
+{
+	vector<string> res;
+
+	string save_dir = getSavePath(save_path);
+	cout << "save_path: " << save_dir << endl;
+	if (CreateDirectoryA(save_dir.c_str(), NULL) ||
+		GetLastError() == ERROR_ALREADY_EXISTS) {
+		try {
+			res.push_back(save_dir + string("/origin.jpg"));
+			imwrite(res.back(), img_origin);
+			res.push_back(save_dir + string("/detect_keypoints.jpg"));
+			imwrite(res.back(), img_detect_kpts);
+			res.push_back(save_dir + string("/remove_outlier.jpg"));
+			imwrite(res.back(), img_rm_outlier);
+			res.push_back(save_dir + string("/ransac_result.jpg"));
+			imwrite(res.back(), img_after_ransac);
+			//res.push_back(save_dir + string("/stitching_result.jpg"));
+			//imwrite(res.back(), img_stitched);
+			res.push_back(save_dir + string("/postprocess.jpg"));
+			imwrite(res.back(), img_postprocess);
+			return res;
+		}
+		catch (runtime_error& ex) {
+			cerr << "cannot save image: " << ex.what() << endl;
+			throw exception("Cannot save image.");
+		}
+	}
+	else {
+		throw exception("Save path error.");
+	}
+	
+	return vector<string>();
+}
+
+void ImageStitcher::setLeftImagePath(const string path)
+{
+	left_img_path = path;
+}
+
+void ImageStitcher::setRightImagePath(const string path)
+{
+	right_img_path = path;
+}
+
+void ImageStitcher::setFeatureExtractor(Feature feature)
+{
+	this->feat = feature;
 }
 
 
@@ -83,15 +185,23 @@ void ImageStitcher::extractFeatures(Mat& descriptors1, Mat& descriptors2)
 	cout << "Extract Features Time:" << tt << "ms" << endl;
 
 	drawMatches(img1, raw_kpts1, img2, raw_kpts2, vector<DMatch>(), img_detect_kpts);
-	imshow("detect keypoints", img_detect_kpts);
+	//imshow("detect keypoints", img_detect_kpts);
 }
 
 
 void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 {
-	BFMatcher matcher;
+	double t0 = getTickCount();
+	//BFMatcher matcher;
 	vector<DMatch> bf_matches;
-	matcher.match(descriptors1, descriptors2, bf_matches);
+	//FlannBasedMatcher matcher;
+	if (feat == Feature::ORB) {
+		BFMatcher().match(descriptors1, descriptors2, bf_matches);
+	}
+	else {
+		FlannBasedMatcher().match(descriptors1, descriptors2, bf_matches);
+	}
+	
 	cout << "The number of match:" << bf_matches.size() << endl;
 
 	//绘制匹配出的关键点
@@ -116,9 +226,10 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 	cout << "max dist=" << max_dist << endl;
 	//筛选出较好的匹配点
 	vector<DMatch> goodMatches;
+	double ratio = (feat == Feature::ORB) ? 0.8 : 0.4;
 	for (int m = 0; m < bf_matches.size(); m++)
 	{
-		if (bf_matches[m].distance < 0.2 * max_dist)
+		if (bf_matches[m].distance < ratio * max_dist)
 		{
 			goodMatches.push_back(bf_matches[m]);
 		}
@@ -142,7 +253,7 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 	int ptCount = goodMatches.size();
 	if (ptCount < 100)
 	{
-		cout<<"Lack of matched points after RANSAC.";
+		throw runtime_error("Lack of matched points after RANSAC.");
 	}
 	//坐标转换为float类型
 		//size_t是标准C库中定义的，应为unsigned int，在64位系统中为long unsigned int,在C++中为了适应不同的平台，增加可移植性。
@@ -151,11 +262,19 @@ void ImageStitcher::matchKeyPoints(Mat& descriptors1, Mat& descriptors2)
 		ransac_kpts1.push_back(raw_kpts1[goodMatches[i].queryIdx]);
 		ransac_kpts2.push_back(raw_kpts2[goodMatches[i].trainIdx]);
 	}
+
+	drawMatches(img1, ransac_kpts1, img2, ransac_kpts2, vector<DMatch>(), img_rm_outlier);
+
+	double freq = getTickFrequency();
+	double tt = ((double)getTickCount() - t0) / freq;
+	cout << "Match KeyPoints Time:" << tt << "ms" << endl;
 }
 
 
 void ImageStitcher::imageTransform()
 {
+	double t0 = getTickCount();
+
 	vector <Point2f> p01, p02;
 	for (::size_t i = 0; i < matches.size(); i++)
 	{
@@ -192,7 +311,7 @@ void ImageStitcher::imageTransform()
 	cout << "RANSAC后匹配点数" << RR_matches.size() << endl;
 	//Mat img_RR_matches;
 	drawMatches(img1, RR_KP1, img2, RR_KP2, RR_matches, img_after_ransac);
-	imshow("After RANSAC", img_after_ransac);
+	//imshow("After RANSAC", img_after_ransac);
 
 	vector<Point2f> imagePoints1, imagePoints2;
 
@@ -205,7 +324,7 @@ void ImageStitcher::imageTransform()
 	Mat home;
 	//invert(m_homography, home);
 	home = m_homography;
-	cout << "invert:" << home << endl;
+	//cout << "invert:" << home << endl;
 
 	std::vector<Point2f> obj_corners(4);//定义右图的四个角
 	obj_corners[0] = cvPoint(0, 0);
@@ -229,19 +348,15 @@ void ImageStitcher::imageTransform()
 	//创建拼接后的图,需提前计算图的大小
 	int dst_width = imageTransform1.cols;  //取最右点的长度为拼接图的长度
 	int dst_height = img1.rows;
-	//Mat dst(dst_height, dst_width, CV_8UC3);
-	//dst.setTo(0);
-	//imageTransform1.copyTo(dst(Rect(0, 0, imageTransform1.cols, imageTransform1.rows)));
-	//img1.copyTo(dst(Rect(0, 0, img1.cols, img1.rows)));
-	//imshow("b_dst", dst);
 	
 	img_stitched = Mat(dst_height, dst_width, CV_8UC3);
 	img_stitched.setTo(0);
 	imageTransform1.copyTo(img_stitched(Rect(0, 0, imageTransform1.cols, imageTransform1.rows)));
 	img1.copyTo(img_stitched(Rect(0, 0, img1.cols, img1.rows)));
-	imshow("stitched image", img_stitched);
-	ImageStitcher::optimizeSeam(img1, imageTransform1, img_stitched, MIN(scene_corners[0].x, scene_corners[3].x), img1.cols);
-	imshow("stitched image after optimize.", img_stitched);
+	//imshow("stitched image", img_stitched);
+	img_postprocess = Mat(img_stitched);
+	ImageStitcher::optimizeSeam(img1, imageTransform1, img_postprocess, MIN(scene_corners[0].x, scene_corners[3].x), img1.cols);
+	//imshow("stitched image after optimize.", img_stitched);
 	
 }
 
@@ -299,7 +414,7 @@ void ImageStitcher::colorBalance()
 	imageRGB[2] = imageRGB[2] * KR;
 
 	merge(imageRGB, img_stitched);
-	imshow("color balance", img_stitched);
+	//imshow("color balance", img_stitched);
 }
 
 Mat matrixWiseMulti(Mat &m1, Mat &m2) {
@@ -371,8 +486,14 @@ void ImageStitcher::AcE(int C, int n, float MaxCG)
 	gainArr.convertTo(gainArr, CV_8U);
 	gainArr = matrixWiseMulti(gainArr, highFreq);
 	Mat dst1 = meanLocal + gainArr;
-	imshow("变增益方法", dst1);
+	//imshow("变增益方法", dst1);
 	Mat dst2 = meanLocal + C * highFreq;
+<<<<<<< HEAD
 	imshow("恒增益方法", dst2);
 
 }
+=======
+	//imshow("恒增益方法", dst2);
+
+}
+>>>>>>> 7f81125028ac48c425f4e00bd89bd0960a676bad
